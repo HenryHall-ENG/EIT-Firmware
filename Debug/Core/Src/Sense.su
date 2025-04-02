@@ -1,0 +1,3 @@
+../Core/Src/Sense.c:14:10:ADS7057_Read	16	static
+../Core/Src/Sense.c:39:7:get_Mag	64	static
+../Core/Src/Sense.c:63:6:collect_Buffer	1304	static

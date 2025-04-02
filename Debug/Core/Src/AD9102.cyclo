@@ -1,0 +1,7 @@
+../Core/Src/AD9102.c:9:6:initAD9102	1
+../Core/Src/AD9102.c:19:6:WriteRegister	4
+../Core/Src/AD9102.c:49:10:ReadRegister	5
+../Core/Src/AD9102.c:80:10:waveConfig	1
+../Core/Src/AD9102.c:89:6:init_DDS	1
+../Core/Src/AD9102.c:111:6:enableOut	1
+../Core/Src/AD9102.c:115:6:disableOut	1
