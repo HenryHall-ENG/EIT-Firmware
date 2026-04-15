@@ -1,3 +1,8 @@
 ../Core/Src/Sense.c:14:10:ADS7057_Read	16	static
 ../Core/Src/Sense.c:39:7:get_Mag	64	static
-../Core/Src/Sense.c:63:6:collect_Buffer	1304	static
+../Core/Src/Sense.c:63:6:difference	24	static
+../Core/Src/Sense.c:71:9:sortMedian	32	static
+../Core/Src/Sense.c:85:6:median	88	static
+../Core/Src/Sense.c:106:7:get_MagBin	7160	static
+../Core/Src/Sense.c:138:6:collect_Buffer	7144	static
+../Core/Src/Sense.c:173:6:waitBuffer	8	static

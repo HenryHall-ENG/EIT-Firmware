@@ -1,7 +1,10 @@
-../Core/Src/AD9102.c:9:6:initAD9102	1
-../Core/Src/AD9102.c:19:6:WriteRegister	4
-../Core/Src/AD9102.c:49:10:ReadRegister	5
-../Core/Src/AD9102.c:80:10:waveConfig	1
-../Core/Src/AD9102.c:89:6:init_DDS	1
-../Core/Src/AD9102.c:111:6:enableOut	1
-../Core/Src/AD9102.c:115:6:disableOut	1
+../Core/Src/AD9102.c:10:6:initAD9102	1
+../Core/Src/AD9102.c:20:6:WriteRegister	4
+../Core/Src/AD9102.c:53:10:ReadRegister	5
+../Core/Src/AD9102.c:84:10:waveConfig	1
+../Core/Src/AD9102.c:94:6:init_DDS	1
+../Core/Src/AD9102.c:117:6:init_SRAM	3
+../Core/Src/AD9102.c:161:6:init_Chirp	3
+../Core/Src/AD9102.c:220:6:init_PRBS	1
+../Core/Src/AD9102.c:250:6:enableOut	1
+../Core/Src/AD9102.c:254:6:disableOut	1

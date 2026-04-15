@@ -30,6 +30,9 @@ void initAD9102(AD9102_t* ad9102, GPIO_TypeDef* port, uint16_t pinTRG, uint16_t 
 void WriteRegister(AD9102_t* ad9102, uint16_t address, uint16_t value);
 uint16_t ReadRegister(AD9102_t* ad9102, uint16_t address);
 void init_DDS(AD9102_t* ad9102, uint32_t frequency);
+void init_SRAM(AD9102_t* ad9102, int16_t* lut, uint32_t size);
+void init_Chirp(AD9102_t* ad9102, uint32_t f0, uint32_t f1, uint32_t df);
+void init_PRBS(AD9102_t* ad9102);
 uint16_t waveConfig(uint8_t PRESTORE_SEL, uint8_t WAVE_SEL);
 void enableOut(AD9102_t* ad9102);
 void disableOut(AD9102_t* ad9102);
