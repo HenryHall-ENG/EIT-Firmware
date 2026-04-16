@@ -138,54 +138,9 @@ int main(void)
 
   HAL_Delay(1000);
 
-  if (SS == 1) {
-	  init_DDS(&AD9102, F_TARG);
+  init_DDS(&AD9102, F_TARG);
 
-  } else {
-	  init_Chirp(&AD9102, 10e3,100e3,1e3);
-  }
-
-
-//
-  int16_t maxVal = 4000;
-//
-//  uint32_t freqStep = AD9102_CLK/16;
-//  uint32_t N = round(freqStep / F_BIN);
-//  uint8_t binaryWord = 0b10; // MSB first
-//  uint8_t numBits = 2;
-//  uint32_t delay = 2000;
-//
-//
-//
-//  for (uint8_t bit = 0; bit < numBits; bit++) {
-//      // Extract each bit from MSB to LSB
-//      uint8_t value = (binaryWord >> (numBits - bit - 1)) & 0x1;
-//
-//      for (uint32_t i = 0; i < N; i++) {
-//          uint32_t index = bit * N + i + delay;
-//          if (value) {
-//              lut[index] = maxVal;
-//          } else {
-//        	  lut[index] = -1 * maxVal;
-//          }
-//      }
-//  }
-
-
-  uint32_t N = 4000;
-
-  for (int i = 0; i < N; i++) {
-      // Generate full-scale 14-bit signed noise: -8191 to +8191
-	  lut[i] = (rand() % 16383);
-  }
-
-//  init_SRAM(&AD9102, lut, N);
-
-  HAL_Delay(5000);
-
-  uint32_t idx = 0;
-  char buffer[32];  // enough for 5 digits + null terminator
-
+  HAL_Delay(1000);
 
   /* USER CODE END 2 */
 
@@ -193,31 +148,7 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-//	  test_stim();
-	  if (SS == 1) {
-		  get_frameSS();
-//		  getXframesTdelay(250,60);
-
-//		  get_frameTR();
-//		  HAL_Delay(1000);
-//		  test_stim();
-//		  getXframesTdelay(10, 10);
-	  } else {
-		  get_frameTR();
-	  }
-
-
-//	  if (idx % 2 == 0) {
-//		  get_frameAlternate(true);
-//
-//	  } else {
-//		  get_frameAlternate(false);
-//
-//	  }
-//	  idx++;
-
-//	  test_bin();
-//	  getXframesTdelay(10, 10);
+	  get_frameSS();
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -274,118 +205,6 @@ void SystemClock_Config(void)
 
 /* USER CODE BEGIN 4 */
 
-
-
-void test_stim(void) {
-	mux_SetMuxPos(&stim_I1,1);
-	mux_SetMuxNeg(&stim_I1,2);
-	mux_Enable(&stim_I1);
-
-	mux_SetMuxPos(&sense_V1, 3);
-	mux_SetMuxNeg(&sense_V1, 4);
-	mux_Enable(&sense_V1);
-
-	enableOut(&AD9102);
-	HAL_Delay(10);
-	disableOut(&AD9102);
-
-	mux_Disable(&stim_I1);
-	mux_Disable(&sense_V1);
-	HAL_Delay(10);
-}
-
-
-void test_bin(void) {
-	const uint32_t num_Meas = N_EL * N_EL - N_EL * 3;
-	float measurements[num_Meas];
-	uint32_t idx = 0;
-
-	for (size_t i = 1; i < (N_EL + 1); i++) {
-		//	uint8_t stim1 = 1;
-		//	uint8_t stim2 = 2;
-		uint8_t stim1 = i;
-		uint8_t stim2 = (i < 16) ? (i + 1) : 1;
-
-		mux_SetMuxPos(&stim_I1, stim1);
-		mux_SetMuxNeg(&stim_I1, stim2);
-		mux_Enable(&stim_I1);
-
-		for (size_t j = 1; j < (N_EL + 1); j++) {
-	//	size_t j = 5;
-			uint8_t sense1 = j;
-			uint8_t sense2 = (j < 16) ? (j + 1) : 1;
-
-			if (stim1 != sense1 && stim1 != sense2 && stim2 != sense1) {
-				int16_t adcBuffer[BUFFER_SIZE] = {0};
-
-
-				mux_SetMuxPos(&sense_V1, sense1);
-				mux_SetMuxNeg(&sense_V1, sense2);
-				mux_Enable(&sense_V1);
-				HAL_Delay(1);
-
-				enableOut(&AD9102);
-
-	//			HAL_Delay(1);
-
-				collect_Buffer(adcBuffer,&AD9102);
-
-				disableOut(&AD9102);
-
-				mux_Disable(&sense_V1);
-
-				float mag = get_MagBin(adcBuffer, 0);
-				measurements[idx] = mag;
-				idx++;
-				sendBuffer((uint8_t*)adcBuffer, 0x01, BUFFER_SIZE);
-			}
-		}
-		mux_Disable(&stim_I1);
-	}
-
-
-//	sendBuffer((uint8_t*)measurements, 0x02, 208);
-//	HAL_Delay(1000);
-}
-
-void get_frameTR(void) {
-	int16_t adcBuffer[BUFFER_SIZE] = {0};
-	size_t i = 1;
-	size_t j = 3;
-//	for (size_t i = 1; i < (N_EL + 1); i++) {
-		uint8_t stim1 = i;
-		uint8_t stim2 = (i < 16) ? (i + 1) : 1;
-
-		mux_SetMuxPos(&stim_I1, stim1);
-		mux_SetMuxNeg(&stim_I1, stim2);
-		mux_Enable(&stim_I1);
-
-//		for (size_t j = 1; j < (N_EL + 1); j++) {
-			uint8_t sense1 = j;
-			uint8_t sense2 = (j < 16) ? (j + 1) : 1;
-
-			if (stim1 != sense1 && stim1 != sense2 && stim2 != sense1) {
-				mux_SetMuxPos(&sense_V1, sense1);
-				mux_SetMuxNeg(&sense_V1, sense2);
-				mux_Enable(&sense_V1);
-
-				collect_Buffer(adcBuffer,&AD9102);
-
-				enableOut(&AD9102);
-
-				waitBuffer();
-
-				disableOut(&AD9102);
-
-				sendBuffer((uint8_t*)adcBuffer, 0x01, BUFFER_SIZE);
-
-				mux_Disable(&sense_V1);
-			}
-//		}
-		mux_Disable(&stim_I1);
-//	}
-}
-
 void get_frameSS(void) {
 	const uint32_t num_Meas = N_EL * N_EL - N_EL * 3;
 	float measurements[num_Meas];
@@ -430,7 +249,7 @@ void get_frameSS(void) {
 					activeBuff = 1;
 					waitBuffer();
 
-					sendBuffer((uint8_t*)adcBuffer1, 0x01, BUFFER_SIZE);
+//					sendBuffer((uint8_t*)adcBuffer1, 0x01, BUFFER_SIZE);
 				} else {
 					collect_Buffer(adcBuffer2,&AD9102);
 					float mag = get_Mag(adcBuffer1, F_TARG);
@@ -439,17 +258,10 @@ void get_frameSS(void) {
 					activeBuff = 0;
 					waitBuffer();
 
-					sendBuffer((uint8_t*)adcBuffer2, 0x01, BUFFER_SIZE);
+//					sendBuffer((uint8_t*)adcBuffer2, 0x01, BUFFER_SIZE);
 				}
 
-
-
-
 				mux_Disable(&sense_V1);
-
-//				HAL_Delay(100);
-
-//				float mag = get_Mag(adcBuffer, F_TARG);
 
 			}
 		}
@@ -464,129 +276,12 @@ void get_frameSS(void) {
 		idx++;
 		activeBuff = 1;
 		waitBuffer();
-		sendBuffer((uint8_t*)adcBuffer1, 0x01, BUFFER_SIZE);
+//		sendBuffer((uint8_t*)adcBuffer1, 0x01, BUFFER_SIZE);
 	} else {
 		collect_Buffer(adcBuffer2,&AD9102);
 		float mag = get_Mag(adcBuffer1, F_TARG);
 		measurements[idx] = mag;
 		idx++;
-		waitBuffer();
-		sendBuffer((uint8_t*)adcBuffer2, 0x01, BUFFER_SIZE);
-		activeBuff = 0;
-	}
-
-//	sendBuffer((uint8_t*)measurements, 0x02, num_Meas);
-}
-
-void get_frameAlternate(bool is_even) {
-
-	const uint32_t num_Meas = N_EL * N_EL - N_EL * 3;
-	float measurements[num_Meas];
-	uint32_t count = 0;
-
-	int16_t adcBuffer1[BUFFER_SIZE] = {0};
-	int16_t adcBuffer2[BUFFER_SIZE] = {0};
-	int16_t isFirst = 1;
-	int16_t activeBuff = 0;
-
-	uint8_t stim1 = 1;
-	uint8_t stim2 = 2;
-	uint8_t sense1 = 3;
-	uint8_t sense2 = 4;
-	uint32_t idx = 1;
-	uint32_t jdx = 1;
-
-
-
-	for (size_t i = 1; i < (N_EL + 1); i++) {
-		if (is_even){
-			idx = 2 * i;
-			stim1 = idx;
-			stim2 = (idx < 16) ? (idx + 2) : 2;
-		} else {
-			idx = 2 * i - 1;
-			stim1 = idx;
-			stim2 = (idx < 15) ? (idx + 2) : 1;
-		}
-
-		mux_SetMuxPos(&stim_I1, stim1);
-		mux_SetMuxNeg(&stim_I1, stim2);
-		mux_Enable(&stim_I1);
-
-		for (size_t j = 1; j < (N_EL + 1); j++) {
-			if (is_even){
-				jdx = 2 * j;
-				sense1 = jdx;
-				sense2 = (jdx < 16) ? (jdx + 2) : 2;
-			} else {
-				jdx = 2 * j - 1;
-				sense1 = jdx;
-				sense2 = (jdx < 15) ? (jdx + 2) : 1;
-			}
-
-
-			if (stim1 != sense1 && stim1 != sense2 && stim2 != sense1) {
-//				HAL_Delay(1000);
-				mux_SetMuxPos(&sense_V1, sense1);
-				mux_SetMuxNeg(&sense_V1, sense2);
-
-				mux_Enable(&sense_V1);
-
-				enableOut(&AD9102);
-
-				if (activeBuff == 0) {
-					collect_Buffer(adcBuffer1,&AD9102);
-
-					if (!isFirst) {
-						float mag = get_Mag(adcBuffer2, F_TARG);
-						measurements[count] = mag;
-						count++;
-					} else {
-						isFirst = 0;
-					}
-
-					activeBuff = 1;
-					waitBuffer();
-
-//					sendBuffer((uint8_t*)adcBuffer1, 0x01, BUFFER_SIZE);
-				} else {
-					collect_Buffer(adcBuffer2,&AD9102);
-					float mag = get_Mag(adcBuffer1, F_TARG);
-					measurements[count] = mag;
-					count++;
-					activeBuff = 0;
-					waitBuffer();
-
-//					sendBuffer((uint8_t*)adcBuffer2, 0x01, BUFFER_SIZE);
-				}
-
-
-				disableOut(&AD9102);
-
-				mux_Disable(&sense_V1);
-
-//				HAL_Delay(100);
-
-//				float mag = get_Mag(adcBuffer, F_TARG);
-
-			}
-		}
-		mux_Disable(&stim_I1);
-	}
-
-	if (activeBuff == 0) {
-		collect_Buffer(adcBuffer1,&AD9102);
-		float mag = get_Mag(adcBuffer2, F_TARG);
-		measurements[count] = mag;
-		count++;
-		activeBuff = 1;
-		waitBuffer();
-//		sendBuffer((uint8_t*)adcBuffer1, 0x01, BUFFER_SIZE);
-	} else {
-		collect_Buffer(adcBuffer2,&AD9102);
-		float mag = get_Mag(adcBuffer1, F_TARG);
-		measurements[count] = mag;
-		count++;
 		waitBuffer();
 //		sendBuffer((uint8_t*)adcBuffer2, 0x01, BUFFER_SIZE);
 		activeBuff = 0;
@@ -594,9 +289,8 @@ void get_frameAlternate(bool is_even) {
 
 	sendBuffer((uint8_t*)measurements, 0x02, num_Meas);
 
+	HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_9);
 }
-
-
 
 void sendBuffer(uint8_t *data, uint8_t packetType, uint16_t dataLength) {
 	//packetType 0x01 == uint16_t 0x02 == float
@@ -606,7 +300,6 @@ void sendBuffer(uint8_t *data, uint8_t packetType, uint16_t dataLength) {
     uint8_t header[5] = {0xAA, 0x55, packetType, dataLengthMSB, dataLengthLSB};
     uint8_t footer[2] = {0x55, 0xAA};
 
-//    uint8_t *data = (uint8_t*)adcBuffer;  // Cast buffer to bytes
 
     // Send header
     while (CDC_Transmit_FS(header, sizeof(header)) == USBD_BUSY);
@@ -634,6 +327,237 @@ void getXframesTdelay(uint32_t Xframes, uint32_t Tdelay) {
 		HAL_Delay(1000);
 	}
 }
+
+
+
+//void test_stim(void) {
+//	mux_SetMuxPos(&stim_I1,1);
+//	mux_SetMuxNeg(&stim_I1,2);
+//	mux_Enable(&stim_I1);
+//
+//	mux_SetMuxPos(&sense_V1, 3);
+//	mux_SetMuxNeg(&sense_V1, 4);
+//	mux_Enable(&sense_V1);
+//
+//	enableOut(&AD9102);
+//	HAL_Delay(10);
+//	disableOut(&AD9102);
+//
+//	mux_Disable(&stim_I1);
+//	mux_Disable(&sense_V1);
+//	HAL_Delay(10);
+//}
+//
+//
+//void test_bin(void) {
+//	const uint32_t num_Meas = N_EL * N_EL - N_EL * 3;
+//	float measurements[num_Meas];
+//	uint32_t idx = 0;
+//
+//	for (size_t i = 1; i < (N_EL + 1); i++) {
+//		//	uint8_t stim1 = 1;
+//		//	uint8_t stim2 = 2;
+//		uint8_t stim1 = i;
+//		uint8_t stim2 = (i < 16) ? (i + 1) : 1;
+//
+//		mux_SetMuxPos(&stim_I1, stim1);
+//		mux_SetMuxNeg(&stim_I1, stim2);
+//		mux_Enable(&stim_I1);
+//
+//		for (size_t j = 1; j < (N_EL + 1); j++) {
+//	//	size_t j = 5;
+//			uint8_t sense1 = j;
+//			uint8_t sense2 = (j < 16) ? (j + 1) : 1;
+//
+//			if (stim1 != sense1 && stim1 != sense2 && stim2 != sense1) {
+//				int16_t adcBuffer[BUFFER_SIZE] = {0};
+//
+//
+//				mux_SetMuxPos(&sense_V1, sense1);
+//				mux_SetMuxNeg(&sense_V1, sense2);
+//				mux_Enable(&sense_V1);
+//				HAL_Delay(1);
+//
+//				enableOut(&AD9102);
+//
+//	//			HAL_Delay(1);
+//
+//				collect_Buffer(adcBuffer,&AD9102);
+//
+//				disableOut(&AD9102);
+//
+//				mux_Disable(&sense_V1);
+//
+//				float mag = get_MagBin(adcBuffer, 0);
+//				measurements[idx] = mag;
+//				idx++;
+//				sendBuffer((uint8_t*)adcBuffer, 0x01, BUFFER_SIZE);
+//			}
+//		}
+//		mux_Disable(&stim_I1);
+//	}
+//
+//
+////	sendBuffer((uint8_t*)measurements, 0x02, 208);
+////	HAL_Delay(1000);
+//}
+//
+//void get_frameTR(void) {
+//	int16_t adcBuffer[BUFFER_SIZE] = {0};
+//	size_t i = 1;
+//	size_t j = 3;
+////	for (size_t i = 1; i < (N_EL + 1); i++) {
+//		uint8_t stim1 = i;
+//		uint8_t stim2 = (i < 16) ? (i + 1) : 1;
+//
+//		mux_SetMuxPos(&stim_I1, stim1);
+//		mux_SetMuxNeg(&stim_I1, stim2);
+//		mux_Enable(&stim_I1);
+//
+////		for (size_t j = 1; j < (N_EL + 1); j++) {
+//			uint8_t sense1 = j;
+//			uint8_t sense2 = (j < 16) ? (j + 1) : 1;
+//
+//			if (stim1 != sense1 && stim1 != sense2 && stim2 != sense1) {
+//				mux_SetMuxPos(&sense_V1, sense1);
+//				mux_SetMuxNeg(&sense_V1, sense2);
+//				mux_Enable(&sense_V1);
+//
+//				collect_Buffer(adcBuffer,&AD9102);
+//
+//				enableOut(&AD9102);
+//
+//				waitBuffer();
+//
+//				disableOut(&AD9102);
+//
+//				sendBuffer((uint8_t*)adcBuffer, 0x01, BUFFER_SIZE);
+//
+//				mux_Disable(&sense_V1);
+//			}
+////		}
+//		mux_Disable(&stim_I1);
+////	}
+//}
+
+
+//void get_frameAlternate(bool is_even) {
+//
+//	const uint32_t num_Meas = N_EL * N_EL - N_EL * 3;
+//	float measurements[num_Meas];
+//	uint32_t count = 0;
+//
+//	int16_t adcBuffer1[BUFFER_SIZE] = {0};
+//	int16_t adcBuffer2[BUFFER_SIZE] = {0};
+//	int16_t isFirst = 1;
+//	int16_t activeBuff = 0;
+//
+//	uint8_t stim1 = 1;
+//	uint8_t stim2 = 2;
+//	uint8_t sense1 = 3;
+//	uint8_t sense2 = 4;
+//	uint32_t idx = 1;
+//	uint32_t jdx = 1;
+//
+//
+//
+//	for (size_t i = 1; i < (N_EL + 1); i++) {
+//		if (is_even){
+//			idx = 2 * i;
+//			stim1 = idx;
+//			stim2 = (idx < 16) ? (idx + 2) : 2;
+//		} else {
+//			idx = 2 * i - 1;
+//			stim1 = idx;
+//			stim2 = (idx < 15) ? (idx + 2) : 1;
+//		}
+//
+//		mux_SetMuxPos(&stim_I1, stim1);
+//		mux_SetMuxNeg(&stim_I1, stim2);
+//		mux_Enable(&stim_I1);
+//
+//		for (size_t j = 1; j < (N_EL + 1); j++) {
+//			if (is_even){
+//				jdx = 2 * j;
+//				sense1 = jdx;
+//				sense2 = (jdx < 16) ? (jdx + 2) : 2;
+//			} else {
+//				jdx = 2 * j - 1;
+//				sense1 = jdx;
+//				sense2 = (jdx < 15) ? (jdx + 2) : 1;
+//			}
+//
+//
+//			if (stim1 != sense1 && stim1 != sense2 && stim2 != sense1) {
+////				HAL_Delay(1000);
+//				mux_SetMuxPos(&sense_V1, sense1);
+//				mux_SetMuxNeg(&sense_V1, sense2);
+//
+//				mux_Enable(&sense_V1);
+//
+//				enableOut(&AD9102);
+//
+//				if (activeBuff == 0) {
+//					collect_Buffer(adcBuffer1,&AD9102);
+//
+//					if (!isFirst) {
+//						float mag = get_Mag(adcBuffer2, F_TARG);
+//						measurements[count] = mag;
+//						count++;
+//					} else {
+//						isFirst = 0;
+//					}
+//
+//					activeBuff = 1;
+//					waitBuffer();
+//
+////					sendBuffer((uint8_t*)adcBuffer1, 0x01, BUFFER_SIZE);
+//				} else {
+//					collect_Buffer(adcBuffer2,&AD9102);
+//					float mag = get_Mag(adcBuffer1, F_TARG);
+//					measurements[count] = mag;
+//					count++;
+//					activeBuff = 0;
+//					waitBuffer();
+//
+////					sendBuffer((uint8_t*)adcBuffer2, 0x01, BUFFER_SIZE);
+//				}
+//
+//
+//				disableOut(&AD9102);
+//
+//				mux_Disable(&sense_V1);
+//
+////				HAL_Delay(100);
+//
+////				float mag = get_Mag(adcBuffer, F_TARG);
+//
+//			}
+//		}
+//		mux_Disable(&stim_I1);
+//	}
+//
+//	if (activeBuff == 0) {
+//		collect_Buffer(adcBuffer1,&AD9102);
+//		float mag = get_Mag(adcBuffer2, F_TARG);
+//		measurements[count] = mag;
+//		count++;
+//		activeBuff = 1;
+//		waitBuffer();
+////		sendBuffer((uint8_t*)adcBuffer1, 0x01, BUFFER_SIZE);
+//	} else {
+//		collect_Buffer(adcBuffer2,&AD9102);
+//		float mag = get_Mag(adcBuffer1, F_TARG);
+//		measurements[count] = mag;
+//		count++;
+//		waitBuffer();
+////		sendBuffer((uint8_t*)adcBuffer2, 0x01, BUFFER_SIZE);
+//		activeBuff = 0;
+//	}
+//
+//	sendBuffer((uint8_t*)measurements, 0x02, num_Meas);
+//
+//}
 
 /* USER CODE END 4 */
 

@@ -11,31 +11,6 @@
 #include "usbd_cdc_if.h"
 
 
-uint16_t ADS7057_Read(void) {
-	uint16_t rx_buff[2] = {0};
-
-
-	while (SPI1->SR & SPI_SR_RXNE) {
-	    (void)SPI1->DR; // Dummy read
-	}
-
-
-	GPIOC->BSRR = (uint32_t)(CS_V1_Pin << 16);
-
-	SPI1->DR = 0;
-	SPI1->DR = 0;
-
-	while (!(SPI1->SR & SPI_SR_RXNE));
-
-	rx_buff[0] = SPI1->DR;
-	rx_buff[1] = SPI1->DR;
-
-	GPIOC->BSRR = (uint32_t)CS_V1_Pin;
-	uint16_t result = (rx_buff[0] << 7) | (rx_buff[1] >> 2);
-
-	return result;
-}
-
 float get_Mag(const int16_t *samples, uint32_t freq){
 	int k = (int)roundf(freq * (BUFFER_SIZE-IGNORE) / FS);
 
@@ -60,80 +35,7 @@ float get_Mag(const int16_t *samples, uint32_t freq){
     return magnitude / (BUFFER_SIZE-IGNORE);
 }
 
-void difference(const int16_t * samples, int32_t * diff) {
 
-	for (size_t i = 0; i < BUFFER_SIZE - 1; i ++) {
-		diff[i] = samples[i+1] - samples[i];
-	}
-
-}
-
-int16_t sortMedian(int16_t * window) {
-	for (size_t j = 1; j < 5; ++j) {
-		int16_t key = window[j];
-		size_t k = j;
-		while (k > 0 && window[k - 1] > key) {
-			window[k] = window[k - 1];
-			--k;
-		}
-		window[k] = key;
-	}
-
-	return window[2];
-}
-
-void median(const int16_t * samples, int16_t * median) {
-
-	for (size_t i = 2; i < BUFFER_SIZE - 2; i ++) {
-		int16_t window[5] = { samples[i - 2], samples[i - 1], samples[i], samples[i + 1], samples[i + 2] };
-		median[i] = sortMedian(window);
-	}
-
-
-	int16_t windowInitial1[5] = {samples[3],samples[2],samples[1],samples[0],samples[0]};
-	int16_t windowInitial2[5] = {samples[2],samples[1],samples[0],samples[0],samples[1]};
-
-
-	int16_t windowFinal1[5] = {samples[BUFFER_SIZE - 2],samples[BUFFER_SIZE - 1],samples[BUFFER_SIZE - 1],samples[BUFFER_SIZE - 2],samples[BUFFER_SIZE - 3]};
-	int16_t windowFinal2[5] = {samples[BUFFER_SIZE - 1],samples[BUFFER_SIZE - 1],samples[BUFFER_SIZE - 2],samples[BUFFER_SIZE - 3],samples[BUFFER_SIZE - 4]};
-
-	median[0] = sortMedian(windowInitial1);
-	median[1] = sortMedian(windowInitial2);
-	median[BUFFER_SIZE - 2] = sortMedian(windowFinal1);
-	median[BUFFER_SIZE - 1] = sortMedian(windowFinal2);
-}
-
-float get_MagBin(const int16_t * samples, uint8_t idx) {
-	int32_t diffOriginal[BUFFER_SIZE - 1] = {0};
-	int32_t diffMedian[BUFFER_SIZE - 1] = {0};
-	int16_t medianFilter[BUFFER_SIZE] = {0};
-
-	difference(samples, diffOriginal);
-	median(samples, medianFilter);
-	difference(medianFilter, diffMedian);
-
-	int32_t min = 9999;
-	int32_t min2 = 9999;
-	int32_t min_idx = 0;
-	int32_t min2_idx = 0;
-
-	for (size_t i = 0; i < BUFFER_SIZE - 1; i++) {
-		if (diffMedian[i] < min) {
-			min = diffMedian[i];
-			min_idx = i;
-		}
-		if (diffMedian[i] > min && diffMedian[i] < min2) {
-			min2 = diffMedian[i];
-			min_idx = i;
-		}
-	}
-
-	int32_t magnitude = -1.0 * diffOriginal[min_idx+idx];
-	if (magnitude < 0) {
-		magnitude = 0;
-	}
-	return magnitude;
-}
 
 void collect_Buffer(int16_t *rx, AD9102_t* ad9102) {
 	  uint16_t zero[BUFFER_SIZE] = {0};
@@ -186,5 +88,103 @@ void waitBuffer(void) {
 	  GPIOC->BSRR = (uint32_t)(CS_V1_Pin);
 }
 
+//uint16_t ADS7057_Read(void) {
+//	uint16_t rx_buff[2] = {0};
+//
+//
+//	while (SPI1->SR & SPI_SR_RXNE) {
+//	    (void)SPI1->DR; // Dummy read
+//	}
+//
+//
+//	GPIOC->BSRR = (uint32_t)(CS_V1_Pin << 16);
+//
+//	SPI1->DR = 0;
+//	SPI1->DR = 0;
+//
+//	while (!(SPI1->SR & SPI_SR_RXNE));
+//
+//	rx_buff[0] = SPI1->DR;
+//	rx_buff[1] = SPI1->DR;
+//
+//	GPIOC->BSRR = (uint32_t)CS_V1_Pin;
+//	uint16_t result = (rx_buff[0] << 7) | (rx_buff[1] >> 2);
+//
+//	return result;
+//}
 
+//void difference(const int16_t * samples, int32_t * diff) {
+//
+//	for (size_t i = 0; i < BUFFER_SIZE - 1; i ++) {
+//		diff[i] = samples[i+1] - samples[i];
+//	}
+//
+//}
+//
+//int16_t sortMedian(int16_t * window) {
+//	for (size_t j = 1; j < 5; ++j) {
+//		int16_t key = window[j];
+//		size_t k = j;
+//		while (k > 0 && window[k - 1] > key) {
+//			window[k] = window[k - 1];
+//			--k;
+//		}
+//		window[k] = key;
+//	}
+//
+//	return window[2];
+//}
+//
+//void median(const int16_t * samples, int16_t * median) {
+//
+//	for (size_t i = 2; i < BUFFER_SIZE - 2; i ++) {
+//		int16_t window[5] = { samples[i - 2], samples[i - 1], samples[i], samples[i + 1], samples[i + 2] };
+//		median[i] = sortMedian(window);
+//	}
+//
+//
+//	int16_t windowInitial1[5] = {samples[3],samples[2],samples[1],samples[0],samples[0]};
+//	int16_t windowInitial2[5] = {samples[2],samples[1],samples[0],samples[0],samples[1]};
+//
+//
+//	int16_t windowFinal1[5] = {samples[BUFFER_SIZE - 2],samples[BUFFER_SIZE - 1],samples[BUFFER_SIZE - 1],samples[BUFFER_SIZE - 2],samples[BUFFER_SIZE - 3]};
+//	int16_t windowFinal2[5] = {samples[BUFFER_SIZE - 1],samples[BUFFER_SIZE - 1],samples[BUFFER_SIZE - 2],samples[BUFFER_SIZE - 3],samples[BUFFER_SIZE - 4]};
+//
+//	median[0] = sortMedian(windowInitial1);
+//	median[1] = sortMedian(windowInitial2);
+//	median[BUFFER_SIZE - 2] = sortMedian(windowFinal1);
+//	median[BUFFER_SIZE - 1] = sortMedian(windowFinal2);
+//}
+//
+//float get_MagBin(const int16_t * samples, uint8_t idx) {
+//	int32_t diffOriginal[BUFFER_SIZE - 1] = {0};
+//	int32_t diffMedian[BUFFER_SIZE - 1] = {0};
+//	int16_t medianFilter[BUFFER_SIZE] = {0};
+//
+//	difference(samples, diffOriginal);
+//	median(samples, medianFilter);
+//	difference(medianFilter, diffMedian);
+//
+//	int32_t min = 9999;
+//	int32_t min2 = 9999;
+//	int32_t min_idx = 0;
+//	int32_t min2_idx = 0;
+//
+//	for (size_t i = 0; i < BUFFER_SIZE - 1; i++) {
+//		if (diffMedian[i] < min) {
+//			min = diffMedian[i];
+//			min_idx = i;
+//		}
+//		if (diffMedian[i] > min && diffMedian[i] < min2) {
+//			min2 = diffMedian[i];
+//			min_idx = i;
+//		}
+//	}
+//
+//	int32_t magnitude = -1.0 * diffOriginal[min_idx+idx];
+//	if (magnitude < 0) {
+//		magnitude = 0;
+//	}
+//	return magnitude;
+//}
 

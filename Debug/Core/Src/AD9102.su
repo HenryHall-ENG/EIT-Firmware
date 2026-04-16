@@ -3,8 +3,5 @@
 ../Core/Src/AD9102.c:53:10:ReadRegister	24	static
 ../Core/Src/AD9102.c:84:10:waveConfig	24	static
 ../Core/Src/AD9102.c:94:6:init_DDS	40	static
-../Core/Src/AD9102.c:117:6:init_SRAM	40	static
-../Core/Src/AD9102.c:161:6:init_Chirp	80	static
-../Core/Src/AD9102.c:220:6:init_PRBS	24	static
-../Core/Src/AD9102.c:250:6:enableOut	16	static
-../Core/Src/AD9102.c:254:6:disableOut	16	static
+../Core/Src/AD9102.c:119:6:enableOut	16	static
+../Core/Src/AD9102.c:123:6:disableOut	16	static
